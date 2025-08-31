@@ -8,9 +8,11 @@ from beancount_black.formatter import Formatter
 from beancount_parser.parser import make_parser
 from beanhub_extract.utils import strip_base_path
 from beanhub_import.data_types import DeletedTransaction
+from beanhub_import.data_types import GeneratedBalance
 from beanhub_import.data_types import GeneratedTransaction
 from beanhub_import.data_types import ImportDoc
 from beanhub_import.data_types import UnprocessedTransaction
+from beanhub_import.data_types import BeancountTransaction
 from beanhub_import.post_processor import apply_change_set
 from beanhub_import.post_processor import compute_changes
 from beanhub_import.post_processor import extract_existing_transactions
@@ -76,6 +78,7 @@ def main(
     )
 
     generated_txns: list[GeneratedTransaction] = []
+    generated_balances: list[GeneratedBalance] = []
     deleted_txns: list[DeletedTransaction] = []
     unprocessed_txns: list[UnprocessedTransaction] = []
     for txn in process_imports(import_doc=import_doc, input_dir=workdir_path):
@@ -88,6 +91,14 @@ def main(
                 extra={"markup": True, "highlighter": None},
             )
             generated_txns.append(txn)
+        elif isinstance(txn, GeneratedBalance):
+            env.logger.info(
+                "Generated balance assertion for [green]%s[/] on [green]%s[/]",
+                txn.account,
+                txn.date,
+                extra={"markup": True, "highlighter": None},
+            )
+            generated_balances.append(txn)
         elif isinstance(txn, DeletedTransaction):
             env.logger.info(
                 "Deleted transaction [green]%s[/]",
@@ -107,6 +118,7 @@ def main(
         else:
             raise ValueError(f"Unexpected type {type(txn)}")
     env.logger.info("Generated %s transactions", len(generated_txns))
+    env.logger.info("Generated %s balance assertions", len(generated_balances))
     env.logger.info("Deleted %s transactions", len(deleted_txns))
     env.logger.info("Skipped %s transactions", len(unprocessed_txns))
 
@@ -144,6 +156,7 @@ def main(
         imported_txns=existing_txns,
         deleted_txns=deleted_txns,
         work_dir=workdir_path,
+        generated_balances=generated_balances,
     )
     for target_file, change_set in change_sets.items():
         if not target_file.exists():
