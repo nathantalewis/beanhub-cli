@@ -200,7 +200,7 @@ def main(
                     tree,
                     functools.partial(combine_transforms, tree_transformers),
                 )
-            with tempfile.NamedTemporaryFile(mode="wt+", suffix=".bean") as output_file:
+            with tempfile.NamedTemporaryFile(mode="wt+", suffix=".bean", newline="\n") as output_file:
                 formatter = Formatter()
                 formatter.format(tree, output_file)
                 output_file.seek(0)
@@ -215,6 +215,6 @@ def main(
                         "File %s changed, backup to %s", filepath, backup_path
                     )
                 output_file.seek(0)
-                with open(filepath, "wt") as input_file:
+                with open(filepath, "wt", newline="\n") as input_file:
                     shutil.copyfileobj(output_file, input_file)
     env.logger.info("done")

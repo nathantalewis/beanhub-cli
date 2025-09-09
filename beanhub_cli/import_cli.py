@@ -185,7 +185,7 @@ def main(
                 tree=tree, change_set=change_set, remove_dangling=remove_dangling
             )
 
-        with target_file.open("wt") as fo:
+        with target_file.open("wt", newline="\n") as fo:
             formatter = Formatter()
             formatter.format(new_tree, fo)
 

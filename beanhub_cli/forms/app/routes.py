@@ -90,7 +90,7 @@ async def submit_form(
                 file_path = pathlib.Path(file_update.file)
                 file_path.parent.mkdir(exist_ok=True, parents=True)
                 if file_update.type == OperationType.append:
-                    with open(file_update.file, "at") as fo:
+                    with open(file_update.file, "at", newline="\n") as fo:
                         fo.write(file_update.content)
                     updated_files.add(file_path)
                 else:
@@ -101,7 +101,8 @@ async def submit_form(
                 tree = parser.parse(updated_file.read_text())
                 output_file = io.StringIO()
                 formatter.format(tree, output_file)
-                updated_file.write_text(output_file.getvalue())
+                with updated_file.open("wt", newline="\n") as f:
+                    f.write(output_file.getvalue())
         except ProcessError as exc:
             errors.extend(exc.errors)
         except RenderError as exc:
@@ -168,5 +169,6 @@ def create_sample_doc(sample_form_doc: deps.SampleFormDocDep) -> dict:
     if form_doc_path.exists():
         return dict(code="already-exists")
     form_doc_path.parent.mkdir(parents=True, exist_ok=True)
-    form_doc_path.write_text(sample_form_doc)
+    with form_doc_path.open("wt", newline="\n") as f:
+        f.write(sample_form_doc)
     return dict(code="ok")
